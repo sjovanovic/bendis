@@ -88,22 +88,21 @@ This is where all the power of Bendis lies, it is a web component with a deep Ja
 
 ```javascript
 
-// example state
+// data
 this.state = {
     foo: {
         bar: 'Foo Bar!'
     },
     baz:[{
         title: 'First'
-    },
-    baz:[{
-        title: 'Second'
+    }, {
+    title: 'Second'
     }]
 }
 
 // bindings
 this.bind('foo.bar', 'h2')
-this.bind('baz', 'li', Array)
+this.bind('baz.*', 'li', Array)
 this.bind('baz.*.title', 'strong')
 
 ```
@@ -115,6 +114,11 @@ The result would look something like this:
 > - **First**
 > - **Second**
 
+
+The bind function has the following signature:
+```
+bind(OBJECT_PATH, CSS_SELECTOR, CALLBACK) // binding a property or object to DOM node with optional callback
+```
 
 Since the state is a deep Proxy, it is simple to change the data as doing `this.state.foo.bar = "New Title!!"`
 In a same manner, you can also mutate the array, for example to add another list item just: `this.state.baz.push({title: "New Item!"})` and immediately the DOM is modified and new list item is added.
@@ -131,7 +135,8 @@ this.bind('foo.bar', 'h2', (ctx)=>{
 ```
 Effect of the above binding is the same as previous one except here you have the callback exposed. The callback is triggered each time the proxy value is modified or removed.
 
-In scenarios where array of objects are bound to the DOM, the elements closely follow the structure of the array so any removing splicing, deleting and other mutations of the array will be applied to the DOM elements. For example, binding a on click event to each element in the array would look like this:
+In scenarios where array of objects are bound to the DOM, the elements closely follow the structure of the array so any removing splicing, deleting and other mutations of the array will be applied to the DOM elements. 
+Adding events to proxied DOM elements would be difficult because of all the mutations, this is why the bind context has ustility `addEventListener` and `removeEventListener` functions that do all the work for you. For example, adding a click event to each title element in the array would look like this:
 
 ```javascript
 
@@ -142,4 +147,4 @@ this.bind('baz.*.title', 'strong', (ctx)=>{
 })
 
 ```
-This will ensure that this click event will trigger no matter you do with the proxied array `baz`.
+This will ensure that this click event will trigger no matter what you do with the proxied array.
