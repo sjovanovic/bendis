@@ -26,7 +26,8 @@ const { minify } = htmlMinifier
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 //const ROOT_PATH = dirname(fileURLToPath(import.meta.url))
 
-
+// produce only HTML with JavaScript included in script tag
+let HTML_ONLY = false
 
 const getProjectRoot = (fileName) => {
   if(!fileName) fileName = 'package.json'
@@ -303,10 +304,14 @@ const build = async (customEntryPath) => {
     
     // Create build
     let scripts = deps + out.outputFiles.map(({ text }) => text).join("\n")
-    await fs.writeFile(OUT_PATH, scripts)
 
-    // Inject compiled source and app custom tag
-    html = html.replace('<!-- HEAD -->', `<script src="${OUT_NAME}"></script>`)
+    if(HTML_ONLY){
+      html = html.replace('<!-- HEAD -->', `<script>${scripts}</script>`)
+    }else {
+      await fs.writeFile(OUT_PATH, scripts)
+      // Inject compiled source and app custom tag
+      html = html.replace('<!-- HEAD -->', `<script src="${OUT_NAME}"></script>`)
+    }
 
     // Get time after build ends
     const timerEnd = Date.now()
@@ -807,6 +812,10 @@ const buildSpecificFile = async (fileName, distPath) => {
   let paths = fileName.map(name => join(ROOT_PATH, `src`, `${name}`))
   await build(paths)
   fs.copyFile(OUT_PATH, join(distPath || DIST_PATH, fileName[0].split(path.sep).pop()))
+}
+
+if(process.argv.includes('--html-only')){
+  HTML_ONLY = true
 }
 
 if(process.argv.includes('--build-file')){
