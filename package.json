@@ -1,0 +1,59 @@
+{
+  "name": "bendis",
+  "version": "1.0.0",
+  "description": "Bendis is minimalistic framework for rapid development of vanilla JavaScript web components and applications.",
+  "main": "index.js",
+  "type": "module",
+  "config": {
+    "port": "3030",
+    "prefix": "bnd"
+  },
+  "bin": {
+    "bendis": "./index.js"
+  },
+  "exports": {
+    "./Bendis": "./src/js/bendis.js",
+    "./BendisRouter": "./src/js/bendis-router.js",
+    "./DataWatcher": "./src/js/datawatcher.js",
+    "./browser": "./browser.js",
+    "./BendisServer": "./src/server/index.js"
+  },
+  "scripts": {
+    "dev": "node bundle.js",
+    "build": "export NODE_ENV=production || set NODE_ENV=production&& node bundle.js --build",
+    "build:win": "set NODE_ENV=production&& node bundle.js --build",
+    "build:dev": "node bundle.js --build",
+    "lint:init": "eslint --init",
+    "lint": "eslint 'src/**/*.js'",
+    "lint:fix": "npm run lint -- --fix",
+    "translations": "node bundle.js --translation-strings",
+    "create:component": "node bundle.js --create-component",
+    "create:page": "node bundle.js --create-page",
+    "create:app": "node bundle.js --create-application",
+    "create": "node bundle.js --create-project",
+    "build:file": "export NODE_ENV=production && node bundle.js --build-file",
+    "build:browser": "export NODE_ENV=production && node bundle.js --build-file js/browser.js --dest-path ."
+  },
+  "author": "Slobodan Jovanovic",
+  "license": "MIT",
+  "dependencies": {
+    
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "chokidar": "^3.5.2",
+    "esbuild": "^0.12.17",
+    "eslint": "^7.31.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-prettier": "^3.4.0",
+    "express": "^4.19.2",
+    "finalhandler": "^1.1.2",
+    "get-google-fonts": "^1.2.2",
+    "html-minifier-terser": "^5.1.1",
+    "jsdom": "^19.0.0",
+    "node-fetch": "^3.1.0",
+    "prettier": "^2.3.2",
+    "serve-static": "^1.14.1"
+  }
+}
