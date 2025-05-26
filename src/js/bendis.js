@@ -286,7 +286,7 @@ export default class Bendis extends HTMLElement {
             }
         }
         // trigger changes for next level of keys if value is object
-        if(typeof val == 'object') {
+        if(typeof val == 'object' && val != null) {
             
             let isArray = Array.isArray(val)
             if(!isArray){

@@ -62,7 +62,7 @@ export const init = (initConf)=>{
     app.use((req, res, next)=>{
         // 404s to index
         let allow = ['.css', '.svg', '.js', '.ttf', '.woff', '.woff2', '.png', '.jpg', '.jpeg', '.gif', '.json', '.html']
-        if(initConf.allowExtensions && Array.isArray(initConf.allowExtensions)) {
+        if(initConf && initConf.allowExtensions && Array.isArray(initConf.allowExtensions)) {
             initConf.allowExtensions.forEach((ext)=>{
                 if(!allow.includes(ext)) allow.push(ext)
             })
