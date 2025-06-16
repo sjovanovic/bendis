@@ -21,6 +21,8 @@ const VERSION = process.env.npm_package_version || '0.1.0'
 let PREFIX = process.env.npm_package_config_prefix || NAME || 'bdx' // prefix for all the web components (change to something short and relevant to your project)
 const PAGE_SELECTOR = 'MainContent'
 
+const BENDIS_CONF = {download_fonts: false}
+
 let RELOAD_SCRIPT
 const { minify } = htmlMinifier
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
@@ -296,10 +298,12 @@ const build = async (customEntryPath) => {
       deps = deps.join("\n")
       html = cleanDependencies(html)
 
-      // download all fonts
-      html = await downloadGoogleFonts(html)
-      console.log('All fonts downloaded.')
-
+      if(BENDIS_CONF.download_fonts){
+        // download all fonts
+        html = await downloadGoogleFonts(html)
+        console.log('All fonts downloaded.')
+      }
+      
     }
     
     // Create build
@@ -816,6 +820,12 @@ const buildSpecificFile = async (fileName, distPath) => {
 
 if(process.argv.includes('--html-only')){
   HTML_ONLY = true
+}
+
+if(process.argv.includes('--download-fonts')){
+  BENDIS_CONF.download_fonts = true
+}else{
+  BENDIS_CONF.download_fonts = false
 }
 
 if(process.argv.includes('--build-file')){
