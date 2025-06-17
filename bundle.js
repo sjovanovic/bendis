@@ -21,15 +21,17 @@ const VERSION = process.env.npm_package_version || '0.1.0'
 let PREFIX = process.env.npm_package_config_prefix || NAME || 'bdx' // prefix for all the web components (change to something short and relevant to your project)
 const PAGE_SELECTOR = 'MainContent'
 
-const BENDIS_CONF = {download_fonts: false}
+const BENDIS_CONF = {
+  download_fonts: false, // download fonts from google fonts during production build
+  html_only: false, // when true produce only one HTML file with JavaScript included in script tag
+  sub_path: process.env.SUB_PATH ? process.env.SUB_PATH : '/'
+}
 
 let RELOAD_SCRIPT
 const { minify } = htmlMinifier
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 //const ROOT_PATH = dirname(fileURLToPath(import.meta.url))
 
-// produce only HTML with JavaScript included in script tag
-let HTML_ONLY = false
 
 const getProjectRoot = (fileName) => {
   if(!fileName) fileName = 'package.json'
@@ -309,13 +311,23 @@ const build = async (customEntryPath) => {
     // Create build
     let scripts = deps + out.outputFiles.map(({ text }) => text).join("\n")
 
-    if(HTML_ONLY){
+    console.log('BENDIS_CONF', BENDIS_CONF)
+
+    if(BENDIS_CONF.html_only){
       html = html.replace('<!-- HEAD -->', `<script>${scripts}</script>`)
     }else {
       await fs.writeFile(OUT_PATH, scripts)
       // Inject compiled source and app custom tag
-      html = html.replace('<!-- HEAD -->', `<script src="${OUT_NAME}"></script>`)
+      let sp = BENDIS_CONF.sub_path
+      if(sp != '/'){
+        html = html.replace('<!-- HEAD -->', `<script src="${sp}${OUT_NAME}"></script>`)
+      }else{
+        html = html.replace('<!-- HEAD -->', `<script src="${OUT_NAME}"></script>`)
+      }
     }
+
+    // replace <base href="/" /> with <base href="${BENDIS_CONF.sub_path}" />
+    html =  html.replace('<base href="/" />', `<base href="${BENDIS_CONF.sub_path}" />`)
 
     // Get time after build ends
     const timerEnd = Date.now()
@@ -819,7 +831,9 @@ const buildSpecificFile = async (fileName, distPath) => {
 }
 
 if(process.argv.includes('--html-only')){
-  HTML_ONLY = true
+  BENDIS_CONF.html_only = true
+}else{
+  BENDIS_CONF.html_only = false
 }
 
 if(process.argv.includes('--download-fonts')){
