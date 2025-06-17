@@ -1,6 +1,6 @@
 {
   "name": "bendis",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Bendis is minimalistic framework for rapid development of vanilla JavaScript web components and applications.",
   "main": "index.js",
   "type": "module",
@@ -39,7 +39,7 @@
   "dependencies": {
     "babel-eslint": "^10.1.0",
     "chokidar": "^3.5.2",
-    "esbuild": "^0.12.29",
+    "esbuild": "^0.25.5",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.23.4",
