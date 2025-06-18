@@ -311,8 +311,6 @@ const build = async (customEntryPath) => {
     // Create build
     let scripts = deps + out.outputFiles.map(({ text }) => text).join("\n")
 
-    console.log('BENDIS_CONF', BENDIS_CONF)
-
     if(BENDIS_CONF.html_only){
       html = html.replace('<!-- HEAD -->', `<script>${scripts}</script>`)
     }else {
@@ -563,7 +561,7 @@ const extractTranslations = async () => {
     }
   }
 
-  await fs.writeFile(`${ASSETS_PATH}/json/strings.json`, JSON.stringify({
+  await fs.writeFile(`${ASSETS_PATH}/strings.json`, JSON.stringify({
     version: Date.now(),
     strings: translations
   }, null, 2), 'utf-8')
@@ -828,6 +826,25 @@ const buildSpecificFile = async (fileName, distPath) => {
   let paths = fileName.map(name => join(ROOT_PATH, `src`, `${name}`))
   await build(paths)
   fs.copyFile(OUT_PATH, join(distPath || DIST_PATH, fileName[0].split(path.sep).pop()))
+}
+
+if(process.argv.includes('--help')){
+  console.log('**********')
+  console.log('* BENDIS *')
+  console.log('**********')
+  console.log('BENDIS micro JavaScript framework. Web components + deep proxy + pure HTML = standard simplicity')
+  console.log(`When called with no arguments, the command will build the application in the development mode, include source maps, run the app on the development server and re-build whenever there is a change in the source code.`)
+  console.log('')
+  console.log('--create-application NAME PREFIX           Creates a new application with name NAME and optional prefix PREFIX (short prefix for the web component tags)')
+  console.log('--create-page PATH                         Creates a new page with path PATH starting with slash (i.e. /contact). The route, the controller and page web component are created.')
+  console.log('--create-component NAME                    New web component is created with name NAME, a html tag will be <PREFIX-NAME/>, also a html template is created in src/html folder.')
+  console.log('--build                                    This switch will build the application in production mode and save in the dist fiolder')
+  console.log('--html-only                                Builds a single html file in the dist folder which contains the javascript inside the script tag')
+  console.log('--download-fonts                           Also download all fonts from Google fonts during production build')
+  console.log('--build-file FILE_PATH                     Build specific file or files (comma delimited), by default it builds the entire application.')
+  console.log('--dest-path                                Used in conjunction with --build-file, specifies path for the output files, defaults to dist folder.')
+  console.log('--translation-strings                      Extracts all text strings for translation and saves them into src/assets/strings.json')
+  process.exit(0)
 }
 
 if(process.argv.includes('--html-only')){

@@ -20,6 +20,26 @@ This is a regular npm command which creates and configures the `package.json` fi
 ## `npm install bendis --save-dev`
 This is how bendis is installed. Since bendis is development tool, it is recommended that it is installed as developer dependency.
 
+## Bendis CLI
+Bendis CLI is usually invoked via `npx bendis` but it can be also installed globaly. Below is the output of `npx bendis --help`
+```
+**********
+* BENDIS *
+**********
+BENDIS micro JavaScript framework. Web components + deep proxy + pure HTML = standard simplicity
+When called with no arguments, the command will build the application in the development mode, include source maps, run the app on the development server and re-build whenever there is a change in the source code.
+
+--create-application NAME PREFIX           Creates a new application with name NAME and optional prefix PREFIX (short prefix for the web component tags)
+--create-page PATH                         Creates a new page with path PATH starting with slash (i.e. /contact). The route, the controller and page web component are created.
+--create-component NAME                    New web component is created with name NAME, a html tag will be <PREFIX-NAME/>, also a html template is created in src/html folder.
+--build                                    This switch will build the application in production mode and save in the dist fiolder
+--html-only                                Builds a single html file in the dist folder which contains the javascript inside the script tag
+--download-fonts                           Also download all fonts from Google fonts during production build
+--build-file FILE_PATH                     Build specific file or files (comma delimited), by default it builds the entire application.
+--dest-path                                Used in conjunction with --build-file, specifies path for the output files, defaults to dist folder.
+--translation-strings                      Extracts all text strings for translation and saves them into src/assets/strings.json
+```
+
 ## `npx bendis --create-application Sol`
 This is how bendis app is created. You only need to run it once on an empty project. It will create all the files necessary to support easy web component development and single page web application development. The argument value ("Sol") is the name of your new app, there is also optional second argument value for the app prefix. This prefix will be used for all your web component tags and class names.
 
