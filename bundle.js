@@ -11,7 +11,7 @@ import { exec } from 'child_process'
 import server from './src/server/index.js'
 
 import fetch from 'node-fetch';
-import GetGoogleFonts from 'get-google-fonts'
+import * as GoogleFonts from 'google-fonts-helper'
 import jsdom from "jsdom"
 
 
@@ -422,8 +422,11 @@ const downloadGoogleFonts = async (html) => {
 
   let config = {
     outputDir: join(DIST_PATH, 'fonts'),
-    path:       './',
-    overwriting: true
+    //path:       './',
+    overwriting: true,
+    fontsDir: 'fonts',
+    fontsPath: './fonts',
+    base64: false
   }
 
   let userAgents = {
@@ -440,10 +443,14 @@ const downloadGoogleFonts = async (html) => {
     let promises = []
     let srcFiles = []
     for(let format in userAgents){
-      let c = {...config}
-      c.cssFile = `fonts_${format}_${i}.css`
-      c.userAgent = userAgents[format]
-      promises.push(new GetGoogleFonts(c).download(url))
+
+      let downloader = GoogleFonts.download(url, {
+        ...config,
+        stylePath: `fonts_${format}_${i}.css`,
+        headers: [['User-Agent', userAgents[format]]]
+      })
+      promises.push(downloader.execute())
+
       srcFiles.push(join(config.outputDir, c.cssFile))
     }
     await Promise.all(promises)
