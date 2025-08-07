@@ -1,6 +1,6 @@
 {
   "name": "bendis",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Bendis is minimalistic framework for rapid development of vanilla JavaScript web components and applications.",
   "main": "index.js",
   "type": "module",
@@ -23,9 +23,6 @@
     "build": "export NODE_ENV=production || set NODE_ENV=production&& node bundle.js --build",
     "build:win": "set NODE_ENV=production&& node bundle.js --build",
     "build:dev": "node bundle.js --build",
-    "lint:init": "eslint --init",
-    "lint": "eslint 'src/**/*.js'",
-    "lint:fix": "npm run lint -- --fix",
     "translations": "node bundle.js --translation-strings",
     "create:component": "node bundle.js --create-component",
     "create:page": "node bundle.js --create-page",
@@ -37,20 +34,12 @@
   "author": "Slobodan Jovanovic",
   "license": "MIT",
   "dependencies": {
-    "babel-eslint": "^10.1.0",
-    "chokidar": "^3.5.2",
+    "chokidar": "^4.0.3",
     "esbuild": "^0.25.5",
-    "eslint": "^7.32.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-import": "^2.23.4",
-    "eslint-plugin-prettier": "^3.4.0",
     "express": "^4.19.2",
-    "finalhandler": "^1.1.2",
     "google-fonts-helper": "^3.7.3",
     "html-minifier-terser": "^5.1.1",
-    "jsdom": "^19.0.0",
-    "node-fetch": "^3.1.0",
-    "prettier": "^2.3.2",
-    "serve-static": "^1.14.1"
+    "jsdom": "^26.1.0",
+    "node-fetch": "^3.1.0"
   }
 }
