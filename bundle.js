@@ -744,8 +744,6 @@ const createApplication = async (name, prefix)=>{
       pkg.config.prefix = prefix
       pkg.config.port = portNew
       pkg.bin = {}
-      if(!pkg.dependencies) pkg.dependencies = {}
-      if(!pkg.dependencies.bendis) pkg.dependencies.bendis = VERSION
       writeFileSync(pkgPath, JSON.stringify(pkg, null, 2))
   }else{
     let pkg = {
@@ -763,17 +761,14 @@ const createApplication = async (name, prefix)=>{
         "prefix": prefix,
         "port": portNew
       },
-      "bin": {},
-      "dependencies": {
-        "bendis": VERSION
-      }
+      "bin": {}
     }
     writeFileSync(pkgPath, JSON.stringify(pkg, null, 2))
   }
 
   try{
-    const { stdout, stderr } = await execAsync(`cd ${projectDir} && npm install`)
-    console.log(stdout)
+    const { stdout, stderr } = await execAsync(`cd ${projectDir} && npm install bendis@latest --save`)
+    //console.log(stdout)
     if(stderr) console.log(stderr)
   }catch(err) {
     console.error(err)
