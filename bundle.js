@@ -357,7 +357,7 @@ const httpServer = async ()=>{
   let serverSetup = null
   let setupPath = path.join(ROOT_PATH, 'serverSetup.js')
 
-  console.log('setupPath', setupPath)
+  console.log('Setting up the server using:', setupPath)
 
   if(existsSync(setupPath)) {
     serverSetup = await import(setupPath)
@@ -903,8 +903,9 @@ if(process.argv.includes('--build-file')){
 }else if(process.argv.includes('--translation-strings')){
   extractTranslations()
 }else if (!process.argv.includes('--build')) {
-  const watcher = chokidar.watch(['src/**/*'])
-  console.log('Watching files... \n')
+  //const watcher = chokidar.watch(['src/**/*'])
+  const watcher = chokidar.watch([SRC_PATH])
+  console.log(`Watching file changes in ${SRC_PATH} ...\n`)
   build().then(_=>httpServer())
   watcher.on('change', () => {
     build()

@@ -140,6 +140,9 @@ export default class BendisRouter extends HTMLElement {
       try{
         return new URL(url || window.location.href).pathname
       }catch(err){
+        if(url.startsWith('./')) {
+            url = `${window.location.pathname}${url.substring(2)}`
+        }
         return new URL(window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + url).pathname
       }
     }
