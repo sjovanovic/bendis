@@ -6,6 +6,7 @@ import path, { basename } from 'path'
 import { readFileSync, existsSync, promises as fs, mkdirSync, writeFileSync, cpSync} from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import util from 'node:util';
 import { exec } from 'child_process'
 
 import server from './src/server/index.js'
@@ -13,6 +14,8 @@ import server from './src/server/index.js'
 import fetch from 'node-fetch';
 import * as GoogleFonts from 'google-fonts-helper'
 import jsdom from "jsdom"
+
+const execAsync = util.promisify(exec);
 
 
 // CHANGE TO MATCH YOUR PROJECT
@@ -267,7 +270,7 @@ const build = async (customEntryPath) => {
           <base href="/" />
           <!-- HEAD -->
           <style>
-            html,body {  margin: 0; height:100%; font-family: sans-serif; }
+            html,body {  margin: 0; height:100dvh; width:100dvh; font-family: sans-serif; }
           </style>
         </head>
         <body>
@@ -622,14 +625,11 @@ const createNewComponent = (name, isIndexPage)=>{
   }
   customElements.define('${elementName}', ${className})
   `
-  let htmlText = `  <style>
-  .Base {
-    color:#000;
-    font-size: 26px;
-    text-shadow: 2px 2px #fff;
-  }
-  </style>
-  <div class="Base">Hello ${elementName}${isIndexPage ? `<div class="${PAGE_SELECTOR}"></div>` : ''}</div>
+  let htmlText = `  <style></style>
+  <div class="Base">
+    ${elementName}
+    ${isIndexPage ? `<div class="${PAGE_SELECTOR}"></div>` : ''}
+  </div>
   `
 
   let jsPath = join(SRC_PATH, 'js', `${elementName}.js`)
@@ -726,21 +726,58 @@ const includeFilePath = (includePath, sectionMarker) => {
   writeFileSync(indexPath, indexFile, 'utf-8')
 }
 
-const createApplication = (name, prefix)=>{
+const createApplication = async (name, prefix)=>{
   let projectDir = ROOT_PATH
   prefix = prefix ? prefix.toLowerCase() : PREFIX.toLowerCase()
   console.log(`☛ About to create application named "${name}" with prefix ${prefix}`)
   let pureName = name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()
 
-
   // update package.json
   let pkgPath = join(projectDir, 'package.json')
-  let pkg = JSON.parse(readFileSync(pkgPath))
-  pkg.name = pureName
-  if(!pkg.config) pkg.config = {}
-  pkg.config.prefix = prefix
-  pkg.bin = {}
-  writeFileSync(pkgPath, JSON.stringify(pkg, null, 2))
+  let portNew = Math.floor(Math.random() * (9999 - 1001 + 1) + 1001)
+
+  if(existsSync(pkgPath)) {
+      let pkg = JSON.parse(readFileSync(pkgPath))
+      pkg.name = pureName
+      pkg.type = 'module'
+      if(!pkg.config) pkg.config = {}
+      pkg.config.prefix = prefix
+      pkg.config.port = portNew
+      pkg.bin = {}
+      if(!pkg.dependencies) pkg.dependencies = {}
+      if(!pkg.dependencies.bendis) pkg.dependencies.bendis = VERSION
+      writeFileSync(pkgPath, JSON.stringify(pkg, null, 2))
+  }else{
+    let pkg = {
+      "name": pureName,
+      "version": VERSION,
+      "description":pureName,
+      "main": "index.js",
+      "type": "module",
+      "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+      },
+      "author": "",
+      "license": "ISC",
+      "config": {
+        "prefix": prefix,
+        "port": portNew
+      },
+      "bin": {},
+      "dependencies": {
+        "bendis": VERSION
+      }
+    }
+    writeFileSync(pkgPath, JSON.stringify(pkg, null, 2))
+  }
+
+  try{
+    const { stdout, stderr } = await execAsync(`cd ${projectDir} && npm install`)
+    console.log(stdout)
+    if(stderr) console.log(stderr)
+  }catch(err) {
+    console.error(err)
+  }
 
   // make sure src folder exists
   if(!existsSync(SRC_PATH)) mkdirSync(SRC_PATH)
@@ -765,7 +802,10 @@ const createApplication = (name, prefix)=>{
   }
   customElements.define('${routerElement}', ${routerClass})`
   let routerPath = join(SRC_PATH, 'js', `${routerElement}.js`) 
-  if(existsSync(routerPath)) throw Error(`File ${routerPath} already exists.`)
+  if(existsSync(routerPath)) {
+    console.error(`Project Already exists, aborting.`)
+    return
+  }
   writeFileSync(routerPath, routerText, 'utf-8')
   includeFilePath(join('js', routerElement), '// components')
   console.log(`☛ Created router class ${routerClass} with tag ${routerElement} in ${routerPath}`)
@@ -801,7 +841,7 @@ const createApplication = (name, prefix)=>{
         <base href="/" />
         <!-- HEAD -->
         <style>
-          html,body {  margin: 0; height:100%; }
+          html,body {  margin: 0; height:100dvh; width:100dvh; font-family: sans-serif;}
         </style>
       </head>
       <body>
