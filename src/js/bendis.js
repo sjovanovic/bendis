@@ -189,7 +189,7 @@ export default class Bendis extends HTMLElement {
         if(!this.allBindings) this.allBindings = {}
         if(!this.allBindings[spath]) this.allBindings[spath] = []
         let element = this.view.querySelector(selector)
-        if(!element) throw Error(`Element with selector ${selector} not found.`)
+        if(!element) return // throw Error(`Element with selector ${selector} not found.`)
         let ancestors = this.getAncestors(element)
         let binding = {path, spath, selector, callback, opts, isArray, hasArray, bindId, arrayBinding, element, defaultCallback, opts, ancestors}
         this.allBindings[spath].push(binding)
@@ -218,14 +218,11 @@ export default class Bendis extends HTMLElement {
 
         if(path[path.length-1] == 'length' && Array.isArray(obj) ) return
         let apath = path.join('.')
-        //console.log(`___________________${operation} ${apath}___________________`)
 
         let bindings = this.allBindings[spath], binding
         if(bindings){
             for(let j=0;j<bindings.length; j++){
                 binding = bindings[j]
-                // set arrTest.* arrTest.3 .TestArray
-                //console.log(`${ctx.operation} ${spath} ${path.join('.')} ${binding.selector}`)
                 let el = null
                 if(binding.arrayBinding){
                     let previousNode = null
@@ -399,216 +396,8 @@ export default class Bendis extends HTMLElement {
         }
     }
 
-    getBoundElement_old(path, watchedPath, binding, resultsCallback){
-        let fidx = watchedPath.indexOf('*')
-        let lidx = watchedPath.lastIndexOf('*')
-        let count = path[lidx]/1
-
-
-        let spath = watchedPath.join('.')
-
-        let cp = [], scp = '', arrCnts = [], arrIdxs = [], nextIdxs = [], prevIdxs = [], ancestors, lastAncestorBinding = null, lastAncestorCount = 0, ancestorBindings = []
-        if(fidx != lidx){
-            watchedPath.forEach((p, i) => p == '*' ? (arrCnts.push(path[i]) && arrIdxs.push(i)) : null) // get the indexes of arrays
-            arrCnts.pop() // pop the last one, it's already counted
-            nextIdxs.push(arrIdxs.pop())
-
-            // prev
-            if(arrIdxs.length > 1) {
-                prevIdxs.push(arrIdxs[arrIdxs.length-1])
-            }
-
-            arrCnts = arrCnts.map(p=>p/1)
-            let l = arrCnts.length-1
-            // decrease the one before 
-            if(arrCnts[l] == 0){
-                arrCnts.pop() // no need to count this one either since it's the first
-            }else{
-                arrCnts[l] = arrCnts[l] - 1
-            }
-
-            //console.log('arrCnts', arrCnts, 'arrIdxs', arrIdxs)
-
-            // arrCnts [2] arrIdxs [1]
-            // arrTest.3.sub.1.name 5
-
-
-            for(let i=0;i<arrIdxs.length; i++){
-                cp = watchedPath.slice(0, arrIdxs[i]+1)
-                scp = cp.join('.')
-
-                
-                
-
-                let bs = this.allBindings[scp]
-                if(bs){ // bindings exists at this path
-                    if(!ancestors) ancestors = this.getAncestors(binding.element)
-                    let ancestorBinding = bs.find(b => {
-                        if(ancestors.includes(b.element)){
-                            return true
-                        }
-                    })
-                    if(ancestorBinding) { // ancestor binding exists for
-                        lastAncestorBinding = ancestorBinding
-                        ancestorBindings.push(ancestorBinding)
-
-
-                        
-
-                        for(let j=0; j<=arrCnts[i]; j++){
-                            cp = path.slice(0, arrIdxs[i])
-                            //console.log('Find A length of', cp.join('.'))
-
-                            cp.push(j+'')
-
-                            
-
-
-                            
-                            cp.push(...path.slice(cp.length, nextIdxs[i]))
-                            scp = cp.join('.')
-                            //console.log('Find length of', scp)
-
-                            let len = this.deepFind(this.state, cp).length
-
-                            
-                            
-
-                            count += len
-                        }
-
-                        
-
-                    }
-                }
-            }
-        }
-
-       
-        // get the element
-
-
-        let elements = this.view.querySelectorAll(`${binding.selector}`)
-        let el = elements[count]
-
-        if(resultsCallback) {
-            resultsCallback({elements, index:count})
-        }
-
-        // if(!el) {
-
-
-            
-
-        //     if(parentCallback){
-
-
-                
-
-
-        //         // element not found, find the parent node instead
-        //         let previousNode = null 
-
-        //         let prev = results[count-1]
-
-        //         if(prev) {
-        //             previousNode = prev
-        //         }else{
-        //             binding.element
-        //         }
-                
-
-
-
-        //         // let parentIdx = 0
-        //         // ancestorBindings.forEach(b => {
-        //         //     let ancIdx = b.path.lastIndexOf('*')
-        //         //     parentIdx += path[ancIdx]/1
-        //         // })
-
-        //         // let ancIdx = path.lastIndexOf('*')
-        //         // if(ancIdx != -1){
-        //         //     parentIdx += path[ancIdx]/1
-        //         // }
-                
-
-        //         // if(lastAncestorBinding){
-        //         //     let lastAncestor = this.view.querySelectorAll(`${lastAncestorBinding.selector}`)[parentIdx]
-        //         //     if(lastAncestor){
-        //         //         parentNode = lastAncestor.querySelector(binding.selector).parentNode
-        //         //     }
-        //         // }else{
-        //         //     parentNode = binding.element.parentNode
-        //         // }
-                
-
-
-
-
-        //         // if(lastAncestorBinding){
-
-                    
-        //         //     let aresults = this.view.querySelectorAll(`${lastAncestorBinding.selector}`)
-
-
-        //         //     let parentIdx = 0
-        //         //     ancestorBindings.forEach(b => {
-        //         //         let ancIdx = b.path.lastIndexOf('*')
-        //         //         parentIdx += path[ancIdx]/1
-        //         //     })
-        //         //     let lastAncestor = this.view.querySelectorAll(`${lastAncestorBinding.selector}`)[parentIdx]
-        //         //     if(lastAncestor){
-        //         //         parentNode = lastAncestor.querySelector(binding.selector).parentNode
-        //         //     }
-
-
-
-        //         //     // let lastAncestor = this.view.querySelectorAll(`${lastAncestorBinding.selector}`)[lastAncestorCount]
-        //         //     // if(lastAncestor){
-        //         //     //     parentNode = lastAncestor.querySelector(binding.selector).parentNode
-        //         //     // }
-                    
-                    
-        //         // }else{
-        //         //     parentNode = binding.element.parentNode
-        //         // }
-
-
-        //         if(parentNode) {
-        //             parentCallback(parentNode)
-        //         }
-
-                
-        //         if(spath.startsWith('arrTest.*')){
-
-        //             console.log(path.join('.'), parentIdx)
-        //         }
-                
-        //     }
-
-        //     // let spath = watchedPath.join('.')
-        //     // if(spath.startsWith('arrTest.*')){
-
-                
-
-        //     //     if(lastAncestorBinding){
-        //     //         console.log(path.join('.'), lastAncestorBinding.selector, lastAncestorCount, this.view.querySelectorAll(`${lastAncestorBinding.selector}`)[lastAncestorCount])
-        //     //     }else{
-        //     //         console.log(path.join('.'), null, lastAncestorCount, binding.element.parentNode)
-        //     //     }
-    
-        //     //     //console.log(spath, lastAncestorCount, count)
-                
-        //     // }
-        // }
-
-        return el
-    }
-
     getAncestors(el){
         let ancestors = []
-        //console.log('Getting ancestors for', el)
-        //el = el.parentNode;
         while (el != this.view) {
             ancestors.unshift(el)
             try{
@@ -617,182 +406,25 @@ export default class Bendis extends HTMLElement {
                
                 throw er
             }
-            
         }
         return ancestors;
     }
-
-    bind_old(path, selector, callback, opts={}){
-        // normalize path
-        path = this.normalizePath(path)
-        let spath = path.join('.')
-
-        // default calback
-
-        let arrayBinding = false
-        if(callback === Array){
-            arrayBinding = true
+    getAncestor(selector, limit=20){
+        let tmp = this.parentNode
+        for(let i=0; i<limit; i++){
+          if(!tmp){return}else if(tmp instanceof ShadowRoot && tmp.host) {
+            if(tmp.host.matches(selector)){
+              return tmp.host
+            }else if(tmp){
+              tmp = tmp.host.parentNode
+            }else{ return }
+          }else if(tmp.matches(selector)) { 
+            return tmp
+          }else{
+            tmp = tmp.parentNode
+          } 
         }
-
-        let defaultCallback = this.defaultCallback(path, null, opts)
-        let hasUserCallback = true
-        if(!callback) {
-            hasUserCallback = false
-            callback = defaultCallback
-        }
-
-        let bindId = 'b'+Math.random().toString().substring(12)
-        let isArray = path[path.length-1] == '*'
-
-        // add binding
-        if(!this.bindings) this.bindings = {}
-        if(!this.bindings[spath]) this.bindings[spath] = []
-        let binding = {path, spath, selector, callback, opts, isArray, bindId, arrayBinding}
-        this.bindings[spath].push(binding)
-
-        // if(isArray) {
-        //     // watch the set/delete of the array itself
-        //     this.watch(path.slice(0, path.length-1), (ctx)=>{
-        //         console.log('ARRAY CHANGE', ctx.operation, ctx)
-        //         if(ctx.operation == 'delete'){
-        //             // make sure that dom is cleared
-
-        //         }
-        //     }, {changesOnly:true})
-        // }
-
-        let cb = (ctx)=>{
-            let {path, watchedPath, operation, obj, val} = ctx
-            if(path[path.length-1] == 'length' && Array.isArray(obj) ) return // ignore setting the array length
-
-            let cpath = [], element = null, lastLength = -1, elementMap = {}, elements = []
-
-            for(let i=0;i<watchedPath.length; i++){
-                let k = watchedPath[i]
-                cpath.push(k)
-                if(k == '*') {
-                    // get selectors at this point and verify if i-th selector exist
-                    let spath = cpath.join('.')
-                    let bindings = this.bindings[spath]
-                    
-                    if(bindings){
-                        let index = path[i]/1
-                        lastLength = cpath.length
-                        for(let j=0;j<bindings.length; j++){
-                            let binding = bindings[j]
-                            if(!binding.arrayBinding) continue
-                            let elems = (element || this.view).querySelectorAll(binding.selector)
-                            if(!binding.template && elems[0]) {
-                                binding.template = elems[0].cloneNode(true)
-                                binding.templateParent = elems[0].parentNode
-                            }
-                            if(elems[index]) {
-                                if(typeof val == 'object') {
-                                    element = binding.template.cloneNode(true)
-                                    elems[index].replaceWith(element)
-                                }else{
-                                    element = elems[index]
-                                }
-                            }else{
-                                if(binding.template) {
-                                    element = binding.template.cloneNode(true)
-                                    let referenceNode = elems[elems.length - 1]
-                                    if(referenceNode) {
-                                        referenceNode.parentNode.insertBefore(element, referenceNode.nextSibling)
-                                    }else{
-                                        binding.templateParent.appendChild(element)
-                                    }
-                                }
-                            }
-                            elementMap[binding.selector] = element
-                            elements.push(element)
-                        }
-                    }
-                }
-            }
-
-            let bindings = this.bindings[spath]
-            if(bindings){
-
-                //if(spath == 'items.*') console.log('binding', binding, 'elementMap', elementMap)
-                
-                // get index of the target element
-                let elIndex = 0
-                path.forEach((p, i) => {
-                    if(p == '*') {
-                        elIndex = elIndex + watchedPath[i]/1
-                    }
-                })
-
-                for(let j=0;j<bindings.length; j++){
-                    let binding = bindings[j]
-
-                    let element = undefined
-                    // if(binding.arrayBinding) {
-                        element = elementMap[binding.selector] || elements[elements.length-1]
-                        if(!element) element = this.view.querySelector(binding.selector)
-                        if(!element) continue
-                        if(lastLength >= 0 && lastLength < path.length) {
-                            element = element.querySelector(binding.selector)
-                        }
-                    // }else{
-                    //     element = this.view.querySelectorAll(binding.selector)[elIndex]
-                    // }
-                    if(!element) continue
-
-                    
-                    if(operation == 'delete') {
-                        element.parentNode.removeChild(element)
-                        continue
-                    }
-
-                    
-
-                    callback({
-                        ...ctx, origPath: path, el: element, element, root: this.state, obj:ctx.target, val: ctx.value, 
-                        defaultCallback: function(){
-                            defaultCallback(this)
-                        },
-                        addEventListener: function(name, cb, opts){
-                            let evtId = bindId + '_' + name + '_' + this.path.join('.')
-                            if(!this.el.__boundEvts || !this.el.__boundEvts[evtId]){
-                                if(!this.el.__boundEvts) this.el.__boundEvts = {}
-                                if(!this.el.__boundEvts[evtId]) {
-                                    this.el.__boundEvts[evtId] = true
-                                    this.el.addEventListener(name, cb, opts)
-                                }
-                            }
-                        }
-                    })
-                }
-
-                // trigger changes for next level of keys if value is object
-                if(typeof val == 'object') {
-                    let isArray = Array.isArray(val)
-                    if(!isArray){
-                        let keys = Object.keys(val)
-                        for(let i=0; i<keys.length; i++){
-                            let key = keys[i]
-                            let apath = spath + '.' + key
-                            if(this.bindings[apath]) {
-                                let detail = {
-                                    target: ctx.target[ctx.prop],
-                                    path: [...ctx.path, key], 
-                                    value: ctx.val[key], 
-                                    receiver: ctx.receiver[ctx.prop], 
-                                    operation:'set', 
-                                    oldValue: (ctx && ctx.oldValue && ctx.oldValue[key] != undefined) ? ctx.oldValue[key] : undefined
-                                }
-                                this.watcher.dispatchEvent(new CustomEvent('data-change', { detail, bubbles:true, composed:true}))
-                            }
-                        }
-                    }else{
-                        //console.log('Its array.')
-                    }
-                }
-            }
-        }
-
-        this.watch(path, cb, opts)
     }
+
+    
 }
