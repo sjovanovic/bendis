@@ -744,6 +744,9 @@ const createApplication = async (name, prefix)=>{
       pkg.config.prefix = prefix
       pkg.config.port = portNew
       pkg.bin = {}
+      if(!pkg.scripts) pkg.scripts = {}
+      if(!pkg.scripts.dev) pkg.scripts.dev = "npx bendis"
+      if(!pkg.scripts.build) pkg.scripts.build = "export NODE_ENV=production || set NODE_ENV=production&& npx bendis --build"
       writeFileSync(pkgPath, JSON.stringify(pkg, null, 2))
   }else{
     let pkg = {
@@ -753,6 +756,8 @@ const createApplication = async (name, prefix)=>{
       "main": "index.js",
       "type": "module",
       "scripts": {
+        "dev": "npx bendis",
+        "build": "export NODE_ENV=production || set NODE_ENV=production&& npx bendis --build",
         "test": "echo \"Error: no test specified\" && exit 1"
       },
       "author": "",

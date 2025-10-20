@@ -1,6 +1,6 @@
 {
   "name": "bendis",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Bendis is minimalistic framework for rapid development of vanilla JavaScript web components and applications.",
   "main": "index.js",
   "type": "module",

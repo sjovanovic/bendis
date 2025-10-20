@@ -23,18 +23,20 @@ export default class Bendis extends HTMLElement {
         let obj = this.state
 
         let cb = (ev)=>{
-            let {detail} = ev
-            if(detail.path.length != path.length) return
+            setTimeout(()=>{
+                let {detail} = ev
+                if(detail.path.length != path.length) return
 
-            // match with asterisk
-            let mismatch = path.find((p, i) => {
-                if(p == '*') return false
-                if(p != detail.path[i]) return true
-            })
-            if(!mismatch) {
-                let prop = detail.path[detail.path.length-1]
-                callback({...detail, prop, watchedPath:path, val: detail.value, root: obj, obj:detail.target})
-            }
+                // match with asterisk
+                let mismatch = path.find((p, i) => {
+                    if(p == '*') return false
+                    if(p != detail.path[i]) return true
+                })
+                if(!mismatch) {
+                    let prop = detail.path[detail.path.length-1]
+                    callback({...detail, prop, watchedPath:path, val: detail.value, root: obj, obj:detail.target})
+                }
+            }, 0)
         }
         // before watching for changes run callback on existing data
         if(!opts.changesOnly){
@@ -140,22 +142,37 @@ export default class Bendis extends HTMLElement {
         return JSON.parse(JSON.stringify(obj))
     }
 
+    get formInputs(){
+        return ['input', 'select', 'textarea', 'button']
+    }
+
     defaultCallback(path, element, opts){
         let cb = (ctx)=>{
             let {el, val, prop} = ctx
 
             if(typeof val == 'object') return // only use default callback on simple types
 
-            let elName = el.nodeName.toLowerCase(), formInputs = ['input', 'select', 'textarea', 'button']
-            let hprop = formInputs.includes(elName) ? 'value' : 'innerHTML'
-            if (el.type == 'checkbox') {
+            let elName = el.nodeName.toLowerCase()
+            let isFormInput = this.formInputs.includes(elName)
+            let hprop = isFormInput ? 'value' : 'innerHTML'
+            if (el.type == 'checkbox' || el.type == 'radio') {
                 el.checked = val
                 ctx.addEventListener('change', (ev) => {
                     ctx.obj[prop] = ev.currentTarget.checked
                 })
             } else {
-                el[hprop] = val
-                ctx.addEventListener('input', (ev) => (ctx.obj[prop] = ev.currentTarget.value))
+                if(isFormInput || el.hasAttribute('contenteditable')){
+                    if(el[hprop] != val) {
+                        el[hprop] = val
+                    }
+                    ctx.addEventListener('input', (ev) => {
+                        if(ev.currentTarget[hprop] != ctx.obj[prop]) {
+                            ctx.obj[prop] = ev.currentTarget[hprop]
+                        }
+                    })
+                }else{
+                    el[hprop] = val
+                }
             }
         }
         return cb
@@ -196,8 +213,11 @@ export default class Bendis extends HTMLElement {
 
         // handle array
         if(arrayBinding){
+            binding.templateElement = element.cloneNode(true)
+            element.style.display = 'none'
             let arrPath = path.slice(0, path.length-1)
             this.watch(arrPath, (ctx)=>{
+                //console.log('operation', ctx.operation, ctx.path, ctx)
                 if(ctx.operation == 'delete' || !ctx.val || !ctx.val.length){
                     // clear items
                     if(ctx.oldValue && Array.isArray(ctx.oldValue)) {
@@ -217,13 +237,12 @@ export default class Bendis extends HTMLElement {
         let spath = watchedPath.join('.')
 
         if(path[path.length-1] == 'length' && Array.isArray(obj) ) return
-        let apath = path.join('.')
 
         let bindings = this.allBindings[spath], binding
         if(bindings){
             for(let j=0;j<bindings.length; j++){
                 binding = bindings[j]
-                let el = null
+                let el = null, elIndex = -1
                 if(binding.arrayBinding){
                     let previousNode = null
                     el = this.getBoundElement(path, watchedPath, binding, (results)=>{
@@ -242,7 +261,8 @@ export default class Bendis extends HTMLElement {
                             binding.element.style.display = null
                         }
                     }else{
-                        el = binding.element.cloneNode(true)
+                        //el = binding.element.cloneNode(true)
+                        el = binding.templateElement.cloneNode(true)
                         if(previousNode) {
                             previousNode.parentNode.appendChild(el)
                         }else{
@@ -255,17 +275,29 @@ export default class Bendis extends HTMLElement {
                     }else{
                         el = this.getBoundElement(path, watchedPath, binding)
                         if(!el) {
-                            console.log('Element not found at', apath)
+                            //console.log('Element not found at', apath)
+                            if(el && ctx.value === undefined) {
+                                el.style.display = 'none'
+                            }
                             continue
                         }
                     }
                 }
-                if(!el) {
+                if(!el || ctx.value === undefined) {
                     //console.log('Element Not found')
+                    if(el && ctx.value === undefined) {
+                        el.style.display = 'none'
+                    }
                     continue
                 }
+
+                el.style.display = null
+
+                if(Array.isArray(ctx.target)){
+                    elIndex = parseInt(ctx.prop)
+                }
                 binding.callback({
-                    ...ctx, origPath: path, el, element:el, root: this.state, obj:ctx.target, val: ctx.value, 
+                    ...ctx, origPath: path, el, element:el, root: this.state, obj:ctx.target, val: ctx.value, index: elIndex,
                     defaultCallback: function(){
                         binding.defaultCallback(this)
                     },
@@ -284,11 +316,10 @@ export default class Bendis extends HTMLElement {
         }
         // trigger changes for next level of keys if value is object
         if(typeof val == 'object' && val != null) {
-            
             let isArray = Array.isArray(val)
             if(!isArray){
                 let keys = Object.keys(val)
-                
+
                 for(let i=0; i<keys.length; i++){
                     let key = keys[i]
                     let apath = spath + '.' + key
@@ -334,7 +365,7 @@ export default class Bendis extends HTMLElement {
         // if * is at the end return that element, otherwise search for cinding.selector inside the last one
 
         let p, c, bs, cp=[], scp='', elem = this.view, elements=[], ancestorBinding, parentBound, ancestors
-        //let spath = watchedPath.join('.')
+
         let hasAsterisk = watchedPath.includes('*')
         if(!hasAsterisk){
             elem = this.view.querySelector(binding.selector)
@@ -342,6 +373,7 @@ export default class Bendis extends HTMLElement {
             resultsCallback({elements, index:0, ancestorBinding, parentBound, ancestors})
             return elem
         }
+
         for(let i=0;i<path.length; i++){
             c = watchedPath[i]
             cp.push(c)
@@ -370,8 +402,9 @@ export default class Bendis extends HTMLElement {
                         }
                         elem = el
 
-                        if(i == path.length-1){
-                            if(!elem.matches(binding.selector)){
+                        let matchesSelector = elem.matches(binding.selector)
+                        if(i == path.length-1 || (i == path.length-2 && matchesSelector)){
+                            if(!matchesSelector){
                                 let elCandidate = elem.querySelector(binding.selector)
                                 if(elCandidate){
                                     elements = Array.prototype.slice(elements)
@@ -381,7 +414,6 @@ export default class Bendis extends HTMLElement {
                                     return elem
                                 }
                             }
-
                             resultsCallback({elements, index:p})
                             return elem
                         }
@@ -403,7 +435,6 @@ export default class Bendis extends HTMLElement {
             try{
                 el = el.parentNode;
             }catch(er) {
-               
                 throw er
             }
         }
@@ -418,13 +449,11 @@ export default class Bendis extends HTMLElement {
             }else if(tmp){
               tmp = tmp.host.parentNode
             }else{ return }
-          }else if(tmp.matches(selector)) { 
+          }else if(tmp.matches && tmp.matches(selector)) { 
             return tmp
           }else{
             tmp = tmp.parentNode
           } 
         }
     }
-
-    
 }
