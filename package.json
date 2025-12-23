@@ -1,6 +1,6 @@
 {
   "name": "bendis",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "Bendis is minimalistic framework for rapid development of vanilla JavaScript web components and applications.",
   "main": "index.js",
   "type": "module",
@@ -29,7 +29,8 @@
     "create:app": "node bundle.js --create-application",
     "create": "node bundle.js --create-project",
     "build:file": "export NODE_ENV=production && node bundle.js --build-file",
-    "build:browser": "export NODE_ENV=production && node bundle.js --build-file js/browser.js --dest-path ."
+    "build:browser": "export NODE_ENV=production && node bundle.js --build-file js/browser.js --dest-path .",
+    "test": "node bundle.js --build-test"
   },
   "author": "Slobodan Jovanovic",
   "license": "MIT",

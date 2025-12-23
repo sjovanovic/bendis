@@ -216,12 +216,23 @@ export default class Bendis extends HTMLElement {
             binding.templateElement = element.cloneNode(true)
             element.style.display = 'none'
             let arrPath = path.slice(0, path.length-1)
+            //console.log('arrPath', arrPath)
             this.watch(arrPath, (ctx)=>{
-                //console.log('operation', ctx.operation, ctx.path, ctx)
+                //console.log('arrPath operation', arrPath, ctx.operation, ctx.path, ctx)
                 if(ctx.operation == 'delete' || !ctx.val || !ctx.val.length){
                     // clear items
                     if(ctx.oldValue && Array.isArray(ctx.oldValue)) {
                         ctx.oldValue.splice(0)
+                    }else if(ctx.operation == 'set'){
+                        // experimental array filling 
+                        setTimeout(()=>{
+                            let {obj, prop} = ctx
+                            let items = JSON.parse(JSON.stringify(obj[prop]))
+                            obj[prop].length = 0
+                            for(let i=0;i<items.length;i++){
+                                obj[prop].push(items[i])
+                            }
+                        }, 0)
                     }
                 }
             }, opts)
@@ -297,19 +308,16 @@ export default class Bendis extends HTMLElement {
                     elIndex = parseInt(ctx.prop)
                 }
                 binding.callback({
-                    ...ctx, origPath: path, el, element:el, root: this.state, obj:ctx.target, val: ctx.value, index: elIndex,
+                    ...ctx, origPath: path, el, element:el, root: this.state, obj:ctx.receiver, val: ctx.value, index: elIndex,
                     defaultCallback: function(){
                         binding.defaultCallback(this)
                     },
                     addEventListener: function(name, cb, opts){
-                        let evtId = binding.bindId + '_' + name + '_' + this.path.join('.')
-                        if(!this.el.__boundEvts || !this.el.__boundEvts[evtId]){
-                            if(!this.el.__boundEvts) this.el.__boundEvts = {}
-                            if(!this.el.__boundEvts[evtId]) {
-                                this.el.__boundEvts[evtId] = true
-                                this.el.addEventListener(name, cb, opts)
-                            }
-                        }
+                        let evtId = binding.bindId + '_' + name + '_' + path.join('.')
+                        if(!el.__be) el.__be = {}
+                        if(el.__be[evtId]) el.removeEventListener(el.__be[evtId].name, el.__be[evtId].cb, el.__be[evtId].opts)
+                        el.__be[evtId] = {name, cb, opts}
+                        el.addEventListener(name, cb, opts)
                     }
                 })
             }

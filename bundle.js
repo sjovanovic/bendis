@@ -3,7 +3,7 @@ import esbuild from 'esbuild'
 import chokidar from 'chokidar'
 import htmlMinifier from 'html-minifier-terser'
 import path, { basename } from 'path'
-import { readFileSync, existsSync, promises as fs, mkdirSync, writeFileSync, cpSync} from 'fs'
+import { readFileSync, existsSync, promises as fs, mkdirSync, writeFileSync, cpSync, readdirSync} from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import util from 'node:util';
@@ -270,7 +270,7 @@ const build = async (customEntryPath) => {
           <base href="/" />
           <!-- HEAD -->
           <style>
-            html,body {  margin: 0; height:100dvh; width:100dvh; font-family: sans-serif; }
+            html,body {  margin: 0; height:100dvh; width:100dvw; font-family: sans-serif; }
           </style>
         </head>
         <body>
@@ -875,6 +875,36 @@ const buildSpecificFile = async (fileName, distPath) => {
   fs.copyFile(OUT_PATH, join(distPath || DIST_PATH, fileName[0].split(path.sep).pop()))
 }
 
+const buildTest = async () => {
+  let testsDir = join(ROOT_PATH, `src`, `tests`)
+  let mainTestFile = 'tests.js'
+  let testComponents = readdirSync(testsDir).filter(f => f != mainTestFile && f.endsWith('.js')).map(f => `<${f.split('.')[0]}-test></${f.split('.')[0]}-test>`)
+  let html = `<!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <title>bendis tests</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <base href="/" />
+      <!-- HEAD -->
+      <style>
+        html,body {  margin: 0; height:100%; font-family: sans-serif; }
+      </style>
+      <script src="tests.js"></script>
+    </head>
+    <body>
+      ${testComponents}
+    </body>
+  </html>`
+  let path = join(testsDir, mainTestFile)
+  
+  await build(path)
+  await fs.copyFile(OUT_PATH, join(DIST_PATH, 'tests.js'))
+  let destTestPath = join(DIST_PATH, 'tests.html')
+  writeFileSync(destTestPath, html)
+  console.log(`Tests built in ${destTestPath}`)
+}
+
 if(process.argv.includes('--help')){
   console.log('**********')
   console.log('* BENDIS *')
@@ -891,6 +921,7 @@ if(process.argv.includes('--help')){
   console.log('--build-file FILE_PATH                     Build specific file or files (comma delimited), by default it builds the entire application.')
   console.log('--dest-path                                Used in conjunction with --build-file, specifies path for the output files, defaults to dist folder.')
   console.log('--translation-strings                      Extracts all text strings for translation and saves them into src/assets/strings.json')
+  console.log('--build-test                               Builds test.html in the dist/ directory from src/tests/tests.js')
   process.exit(0)
 }
 
@@ -942,6 +973,15 @@ if(process.argv.includes('--build-file')){
   createNewComponent(name)
 }else if(process.argv.includes('--translation-strings')){
   extractTranslations()
+}else if(process.argv.includes('--build-test')){
+  
+
+  const watcher = chokidar.watch([SRC_PATH])
+  console.log(`Watching file changes in ${SRC_PATH} ...\n`)
+  buildTest().then(_=>httpServer())
+  watcher.on('change', () => {
+    buildTest()
+  })
 }else if (!process.argv.includes('--build')) {
   //const watcher = chokidar.watch(['src/**/*'])
   const watcher = chokidar.watch([SRC_PATH])
@@ -951,9 +991,6 @@ if(process.argv.includes('--build-file')){
     build()
   })
 } else {
-
-  console.log('NODE_ENV', process.env.NODE_ENV, process.argv[1])
-
   if (process.argv[1].endsWith('bendis') || import.meta.url.endsWith(process.argv[1])) {
     build()
   }
