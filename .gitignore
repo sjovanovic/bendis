@@ -123,3 +123,6 @@ public/
 tmp/
 temp/
 .DS_Store
+
+# Other
+.npmrc

@@ -32,7 +32,7 @@ const BENDIS_CONF = {
 
 let RELOAD_SCRIPT
 const { minify } = htmlMinifier
-const IS_PRODUCTION = process.env.NODE_ENV === 'production'
+let IS_PRODUCTION = process.env.NODE_ENV === 'production'
 //const ROOT_PATH = dirname(fileURLToPath(import.meta.url))
 
 
@@ -50,7 +50,8 @@ const getProjectRoot = (fileName) => {
       break
     }
   }
-  return fdir
+  console.log('ROOT PATH', 'file://' + fdir)
+  return 'file://' + fdir
 }
 const ROOT_PATH = getProjectRoot()
 
@@ -358,7 +359,7 @@ const build = async (customEntryPath) => {
 const httpServer = async ()=>{
 
   let serverSetup = null
-  let setupPath = path.join(ROOT_PATH, 'serverSetup.js')
+  let setupPath = path.join('file://' + ROOT_PATH, 'serverSetup.js')
 
   console.log('Setting up the server using:', setupPath)
 
@@ -992,10 +993,14 @@ if(process.argv.includes('--build-file')){
   })
 } else {
   if (process.argv[1].endsWith('bendis') || import.meta.url.endsWith(process.argv[1])) {
+    IS_PRODUCTION = true
     build()
+    IS_PRODUCTION = process.env.NODE_ENV === 'production'
   }
   else if(require.main === module) {
+    IS_PRODUCTION = true
     build()
+    IS_PRODUCTION = process.env.NODE_ENV === 'production'
   }
 }
 
