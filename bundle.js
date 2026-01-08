@@ -4,7 +4,7 @@ import chokidar from 'chokidar'
 import htmlMinifier from 'html-minifier-terser'
 import path, { basename } from 'path'
 import { readFileSync, existsSync, promises as fs, mkdirSync, writeFileSync, cpSync, readdirSync} from 'fs'
-import { fileURLToPath } from 'url'
+import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, join } from 'path'
 import util from 'node:util';
 import { exec } from 'child_process'
@@ -50,8 +50,7 @@ const getProjectRoot = (fileName) => {
       break
     }
   }
-  console.log('ROOT PATH', 'file://' + fdir)
-  return 'file://' + fdir
+  return fdir
 }
 const ROOT_PATH = getProjectRoot()
 
@@ -357,14 +356,11 @@ const build = async (customEntryPath) => {
 }
 
 const httpServer = async ()=>{
-
   let serverSetup = null
-  let setupPath = path.join('file://' + ROOT_PATH, 'serverSetup.js')
-
-  console.log('Setting up the server using:', setupPath)
-
+  let setupPath = path.join(ROOT_PATH, 'serverSetup.js')
   if(existsSync(setupPath)) {
-    serverSetup = await import(setupPath)
+    const setupUrl = pathToFileURL(setupPath).href
+    serverSetup = await import(setupUrl)
     serverSetup = serverSetup.default
   }
   try{
