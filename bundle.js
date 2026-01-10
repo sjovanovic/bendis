@@ -21,7 +21,7 @@ const execAsync = util.promisify(exec);
 // CHANGE TO MATCH YOUR PROJECT
 const NAME = process.env.npm_package_name || 'bendis' // package name
 const VERSION = process.env.npm_package_version || '0.1.0'
-let PREFIX = process.env.npm_package_config_prefix || NAME || 'bdx' // prefix for all the web components (change to something short and relevant to your project)
+let PREFIX = process.env.npm_package_config_prefix || 'bds' // prefix for all the web components (change to something short and relevant to your project)
 const PAGE_SELECTOR = 'MainContent'
 
 const BENDIS_CONF = {
@@ -957,7 +957,7 @@ if(process.argv.includes('--build-file')){
 }else if(process.argv.includes('--create-application')){
   let nameIdx = process.argv.indexOf('--create-application') + 1
   let name = process.argv[nameIdx]
-  let prefix = process.argv[nameIdx + 1] ? process.argv[nameIdx + 1] : PREFIX.toLowerCase()
+  let prefix = process.argv[nameIdx + 1] ? process.argv[nameIdx + 1] : (name.toLowerCase().substring(0, 3) || PREFIX.toLowerCase())
   PREFIX = prefix
   createApplication(name, prefix)
 }else if(process.argv.includes('--create-page')){

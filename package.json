@@ -1,12 +1,12 @@
 {
   "name": "bendis",
-  "version": "1.1.9",
+  "version": "1.2.0",
   "description": "Bendis is minimalistic framework for rapid development of vanilla JavaScript web components and applications.",
   "main": "index.js",
   "type": "module",
   "config": {
     "port": "3030",
-    "prefix": "bnd"
+    "prefix": "bds"
   },
   "bin": {
     "bendis": "./index.js"
