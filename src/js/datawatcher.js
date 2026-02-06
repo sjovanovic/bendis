@@ -170,4 +170,3 @@ export default class DataWatcher extends HTMLElement {
         return proxify(target, []);
     }
 }
-customElements.define('data-watcher', DataWatcher)

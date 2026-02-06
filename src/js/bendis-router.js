@@ -283,4 +283,5 @@ export default class BendisRouter extends HTMLElement {
     }
 
   }
-  customElements.define('bendis-route', BendisRouter)
+  customElements.get('bendis-route') || customElements.define('bendis-route', BendisRouter);
+

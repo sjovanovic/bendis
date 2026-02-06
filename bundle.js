@@ -372,6 +372,16 @@ const httpServer = async ()=>{
   }
 }
 
+const buildSetup = async ()=>{
+  let buildSetup = null
+  let setupPath = path.join(ROOT_PATH, 'buildSetup.js')
+  if(existsSync(setupPath)) {
+    const setupUrl = pathToFileURL(setupPath).href
+    buildSetup = await import(setupUrl)
+    buildSetup = serverSetup.default
+  } 
+}
+
 const downloadDependencies = async (html) => {
   let results = []
   let matches = html.match(/\<script\s+src\s*=\s*\"(.+)\"/g)
@@ -838,7 +848,7 @@ const createApplication = async (name, prefix)=>{
         <base href="/" />
         <!-- HEAD -->
         <style>
-          html,body {  margin: 0; height:100dvh; width:100dvh; font-family: sans-serif;}
+          html,body {  margin: 0; height:100dvh; width:100dvw; font-family: sans-serif;}
         </style>
       </head>
       <body>
