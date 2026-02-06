@@ -1,5 +1,6 @@
 
 import DataWatcher from './datawatcher.js'
+import './datawatcher.js'
 
 export default class Bendis extends HTMLElement {
 
@@ -9,7 +10,10 @@ export default class Bendis extends HTMLElement {
             pfx:'bnd',
             ...opts
         }
-        this.watcher = new DataWatcher(data)
+        //this.watcher = new DataWatcher(data)
+        this.watcher = document.createElement('data-watcher')
+        this.watcher.data = data
+
         this.shadow = this.attachShadow({ mode: 'open' })
         this.view = this.shadowRoot
     }

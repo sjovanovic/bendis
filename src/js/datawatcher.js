@@ -1,9 +1,9 @@
 export default class DataWatcher extends HTMLElement {
 
-    constructor(data){
-      super()
-      this.data = data || {}
-    }
+    // constructor(data){
+    //   super()
+    //   this.data = data || {}
+    // }
 
     set data(object){
         this.object = object
@@ -108,7 +108,7 @@ export default class DataWatcher extends HTMLElement {
         function makeHandler(path) {
           return {
             set(target, key, value, receiver) {
-              if (value != null && typeof value === 'object') {
+              if (value && value != null && typeof value === 'object') {
                 value = proxify(value, [...path, key]);
               }
               let oldValue = target[key]
@@ -158,7 +158,7 @@ export default class DataWatcher extends HTMLElement {
       
         function proxify(obj, path) {
           for (let key of Object.keys(obj)) {
-            if (obj[key] != null && typeof obj[key] === 'object') {
+            if (obj[key] && obj[key] != null && typeof obj[key] === 'object') {
               obj[key] = proxify(obj[key], [...path, key]);
             }
           }
@@ -166,8 +166,14 @@ export default class DataWatcher extends HTMLElement {
           preproxy.set(p, obj);
           return p;
         }
-      
-        return proxify(target, []);
+
+        if (target && target != null && typeof target === 'object') {
+          return proxify(target, []);
+        }else{
+          return proxify({}, []);
+        }
     }
 }
-customElements.get('data-watcher') || customElements.define('data-watcher', DataWatcher)
+try{
+  customElements.define('data-watcher', DataWatcher)
+}catch(err){}
