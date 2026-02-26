@@ -468,4 +468,14 @@ export default class Bendis extends HTMLElement {
           } 
         }
     }
+    dispatchDescendantEvent(event, selector='*'){
+        if(!event) return
+        event.preventDefault()
+        event.stopPropagation()
+        this.view.querySelectorAll(selector || '*').forEach(el => {
+            if(customElements.get(el.nodeName.toLowerCase())){
+                el.dispatchEvent(event)
+            }
+        })
+    }
 }

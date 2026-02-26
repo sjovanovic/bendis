@@ -56,7 +56,7 @@ export const init = (initConf)=>{
     
     let staticServe = express.static(DIST_PATH)
     if(initConf && initConf.callback){
-        initConf.callback(server, app)
+        initConf.callback(server, app, {static: express.static})
     }
 
     app.use((req, res, next)=>{

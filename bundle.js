@@ -35,6 +35,7 @@ const { minify } = htmlMinifier
 let IS_PRODUCTION = process.env.NODE_ENV === 'production'
 //const ROOT_PATH = dirname(fileURLToPath(import.meta.url))
 
+const WATCH = {}
 
 const getProjectRoot = (fileName) => {
   if(!fileName) fileName = 'package.json'
@@ -226,8 +227,7 @@ const build = async (customEntryPath) => {
     // Get time before build starts
     const timerStart = Date.now()
 
-    // Build code
-    const out = await esbuild.build({
+    let buildConfig = {
       plugins: [htmlPlugin, rawPlugin],
       color: true,
       entryPoints: customEntryPath || [ENTRY_PATH],
@@ -239,7 +239,21 @@ const build = async (customEntryPath) => {
       platform: 'browser',
       logLevel: 'error',
       outdir: ' '
-    })
+    }
+
+    await customBuild({
+      build: esbuild.build,
+      config: buildConfig,
+      bendisConfig: BENDIS_CONF,
+      paths: {ROOT_PATH, SRC_PATH, ASSETS_PATH, DIST_PATH, HTML_PATH, ENTRY_PATH, TEMPLATE_PATH, OUT_PATH},
+      name: NAME,
+      version: VERSION,
+      outName: OUT_NAME,
+      watcher: WATCH.watcher
+    }, 'pre')
+
+    // Build code
+    const out = await esbuild.build(buildConfig)
 
     // Make sure dist folder exists
     if (!existsSync(DIST_PATH)) {
@@ -314,6 +328,21 @@ const build = async (customEntryPath) => {
     // Create build
     let scripts = deps + out.outputFiles.map(({ text }) => text).join("\n")
 
+    // custom build function can modify the generated script before it is written to dist or injected into html
+    let customScript = await customBuild({
+      build: esbuild.build,
+      config: buildConfig,
+      bendisConfig: BENDIS_CONF,
+      paths: {ROOT_PATH, SRC_PATH, ASSETS_PATH, DIST_PATH, HTML_PATH, ENTRY_PATH, TEMPLATE_PATH, OUT_PATH},
+      name: NAME,
+      version: VERSION,
+      outName: OUT_NAME,
+      watcher: WATCH.watcher,
+      bundle: scripts
+    }, 'post')
+    if(customScript) scripts = customScript
+
+
     if(BENDIS_CONF.html_only){
       html = html.replace('<!-- HEAD -->', `<script>${scripts}</script>`)
     }else {
@@ -372,14 +401,27 @@ const httpServer = async ()=>{
   }
 }
 
-const buildSetup = async ()=>{
+const customBuild = async (context={}, phase='post')=>{
   let buildSetup = null
   let setupPath = path.join(ROOT_PATH, 'buildSetup.js')
   if(existsSync(setupPath)) {
     const setupUrl = pathToFileURL(setupPath).href
     buildSetup = await import(setupUrl)
-    buildSetup = serverSetup.default
-  } 
+  }else{
+    return
+  }
+  try{
+    if(phase == 'pre' && buildSetup.preBuild){
+      return await buildSetup.preBuild(context)
+    }else if (phase == 'post' && buildSetup.postBuild){
+      return await buildSetup.postBuild(context)
+    }else if (buildSetup.default){
+      return await buildSetup.default(context)
+    }
+  }catch(err){
+    console.log('Custom build error:')
+    console.error(err)
+  }
 }
 
 const downloadDependencies = async (html) => {
@@ -984,14 +1026,15 @@ if(process.argv.includes('--build-file')){
   
 
   const watcher = chokidar.watch([SRC_PATH])
+  WATCH.watcher = watcher
   console.log(`Watching file changes in ${SRC_PATH} ...\n`)
   buildTest().then(_=>httpServer())
   watcher.on('change', () => {
     buildTest()
   })
 }else if (!process.argv.includes('--build')) {
-  //const watcher = chokidar.watch(['src/**/*'])
   const watcher = chokidar.watch([SRC_PATH])
+  WATCH.watcher = watcher
   console.log(`Watching file changes in ${SRC_PATH} ...\n`)
   build().then(_=>httpServer())
   watcher.on('change', () => {
