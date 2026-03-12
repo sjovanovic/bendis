@@ -447,7 +447,16 @@ const cleanDependencies = (html) => {
   let matches = html.match(/\<script\s+src\s*=\s*\"(.+)\".+\<\/script\>/g)
   if(matches && matches.length) {
     matches.forEach(m=>{
-      html = html.replace(m, '')
+      let match = m.match(/\<script\s+src\s*=\s*\"(.+)\"/)
+      if(match && match.length > 1){
+        let uri = match[1]
+        if(uri.startsWith('http')) {
+          html = html.replace(m, '')
+        }else if(BENDIS_CONF.sub_path) {
+          uri = BENDIS_CONF.sub_path + uri
+          html = html.replace(m, `<script src="${uri}"></script>`)
+        }
+      }
     })
   }
   return html
@@ -456,7 +465,6 @@ const cleanDependencies = (html) => {
 const downloadGoogleFonts = async (html) => {
 
   // get all google stylesheet hrefs
-  // <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@200;300;400;700&display=swap" rel="stylesheet">
   let urls = []
   let matches = html.match(/\<link\s+href\s*=\s*\"(.+)\"\s+.*rel\=\"stylesheet/g)
   if(matches && matches.length) {
